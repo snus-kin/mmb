@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat|Quicksand');
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-display: swap;
+}
+
+body {
+	background-color: #f7f7f7;
+	color: #303030;
+	font-family: 'Montserrat', Sans-Serif;
+}
+
+.entry-title a {
+	font-weight: bold;
+
+	background-image: linear-gradient(#ddd,#ddd);
+	background-repeat: no-repeat;
+	background-size: 100% 2px;
+	background-position: 100% 0;
+
+	transition: background-size 0.2s ease-in;
+}
+
+.entry-title a:hover{
+	background-size: calc(100% + .5em) calc(100% + .5em);
+	color: #000;
+}
+
+a {
+	color: #000;
+	font-weight: bold;
+	text-decoration: none;
+	
+	transition: 0.2s;
+}
+
+a:hover {
+	color: #0066B2;
+}
+
+li {
+	margin-bottom: 1vh;
+}
+
+img {
+	display: block;
+	margin: 0 auto;
+	max-width: 100%;
+}
+
+.back {
+	margin: 5vh auto;
+	width: 100%;
+	text-align: center;
+}
+
+a.back {
+	display: inline-block;
+	line-height: 30px;
+}
+
+.title h1 {
+	display: inline-block;
+	padding: 10px;
+	margin-left: 10%;
+	margin: 2.5%;
+	
+	font-family: 'Quicksand', Sans-Serif;
+	font-size: 40pt;
+}
+
+.body {
+	width: 50vw;
+	display: block;
+	margin: auto;
+}
+
+blockquote {
+	border-left: 3px solid #000;
+	padding-left: 15px;
+}
+
+.entry-title {
+	font-family: 'Montserrat', Sans-Serif;
+	font-size: 30pt;
+	margin-bottom: 0;
+}
+
+.published {
+	margin-top: -10px;
+	font-style: italic;
+	font-weight: lighter;
+	font-size: 18pt;
+}
+
+.entry-content {
+	font-size: 12pt;
+}
+
+.ert {
+	font-size: 12pt;
+}
+
+.left-footer {
+	float: left;
+	width: 33.3%;
+	text-align: left;
+}
+
+.center-footer {
+	float: left;
+	width: 33.3%;
+	text-align: center;
+}
+
+.sidenote {
+	position: absolute;
+	margin-left: calc(50vw + 20px);
+	width: 10%;
+	padding 10px;
+}
+
+@media only screen and (max-width: 768px) {
+	.body { width: 75vw; }
+	.title h1 { font-size 30pt; }
+	.entry-title { font-size: 15pt; }
+	.published { font-size: 13pt; }
+	img { width: 75vw; }
+	blockquote { margin-left: 0; }
+	.not-important { display: none; } 
+}

@@ -1,0 +1,19 @@
+<html>
+<head>
+    <title>{{metadata.title}}</title>
+    <link rel="stylesheet" href="{{static.style}}">
+</head>
+<body>
+<div class="title">
+    <h1><a href="index.html"{{blog_title}}</a></h1>
+<div>
+<section class="body" id="content">
+    <h2 class="entry-title">{{metadata.title}}</h2>
+    <time class="published"><i>{{metadata.date}}</i></time>
+
+    <div class="entry-content">
+        {{{content}}}
+    </div>
+</div>
+</body>
+</html>

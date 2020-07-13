@@ -1,0 +1,25 @@
+<html>
+<head>
+   <title>{{blog_title}}</title> 
+   <link rel="stylesheet" href="{{static.style}}">
+</head>
+
+<body>
+<div class="title"><h1><a href="index.html">{{blog_title}}</a></h1></div>
+<div class="body">
+    <ul id="post-list" style="list-style-type:none">
+        {{#articles}}
+            <li>
+            <article class="entry">
+                <h2 class="entry-title">
+                    <a href="{{metadata.slug}}" title="{{metadata.title}}">{{metadata.title}}</a>
+                </h2>
+                <time class="published"><i>{{metadata.date}}</i></time>
+                <div class="entry-content">{{metadata.description}}</div>
+            </article>
+            </li>
+        {{/articles}}
+    </ul>
+</div>
+</body>
+</html>

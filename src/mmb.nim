@@ -19,9 +19,8 @@ proc walkContent(directory: string): JsonNode =
 when isMainModule:
   let timeStart = now()
   var content: JsonNode = newJObject()
-  content["blog_title"] = %* "BLOG TITLE!"
+  content["blog_title"] = %* "Blog"
   content["articles"] = walkContent("content")
   generateIndexHtml(content)
-  echo pretty(content)
   let timeEnd = now()
   echo "Built site in: ", (timeEnd - timeStart).inMilliseconds, "ms"
