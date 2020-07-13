@@ -8,8 +8,6 @@ srcDir        = "src"
 binDir        = "build"
 bin           = @["mmb"]
 
-
-
 # Dependencies
 
 requires "nim >= 1.2.0"

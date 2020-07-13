@@ -1,4 +1,4 @@
-import os, json
+import json
 import markdown
 
 proc parseArticle*(file: string): JsonNode =
@@ -19,11 +19,13 @@ proc parseArticle*(file: string): JsonNode =
   let headerEnd = articleFile.find('}')
   let header = articleFile[headerStart .. headerEnd]
 
-  let article = parseJson("{}")
+  let article = newJObject()
 
   # now parse the file itself
   try:
     article["metadata"] = parseJson(header)
+    # add .html to the end of the slug so things work later, perhaps there's a nicer way of doing this
+    article["metadata"]["slug"] = %* (article["metadata"]["slug"].getStr & ".html")
     article["content"] = %* markdown(articleFile[headerEnd+1 ..< len(articleFile)])
     return article
   except JsonParsingError:
