@@ -6,7 +6,7 @@ description   = "static site generator"
 license       = "GPL-3.0"
 srcDir        = "src"
 binDir        = "build"
-bin           = @["static_site_generator"]
+bin           = @["mmb"]
 
 
 
