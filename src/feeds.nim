@@ -1,4 +1,4 @@
-import json, parsecfg, xmltree, strutils
+import json, parsecfg, xmltree, strutils, asyncdispatch
 ## lets make xml feeds here from json objects
 ##
 ## TODO read the rss/atom spec
@@ -23,33 +23,39 @@ proc newFeedGenerator*(config: Config): feedGenerator =
     jsonPath: outputPath & config.getSectionValue("feeds", "jsonFile")
   )
 
-proc makeRSS(fg: feedGenerator, blog: JsonNode): void =
+proc makeRSS(fg: feedGenerator, blog: JsonNode) {.async.} =
   ## https://validator.w3.org/feed/docs/rss2.html
   ## <channel>
-  ##  title, link, description, pubDate, image?
+  ##  title, link, description, pubDate, atom:link
   ## <item>
   ##  title, link, description, pubDate, author, source
-  var tagList: array[5, XmlNode]
-  taglist[0] = <>title(newText(blog["blog_title"].getStr))
-  taglist[1] = <>link(newText(blog["blog_url"].getStr))
-  taglist[2] = <>description(newText(blog["blog_description"].getStr))
-  taglist[3] = <>pubDate(newText(blog["last_published"].getStr))
+  var channel: seq[XmlNode]
+  channel.add <>title(newText(blog["blog_title"].getStr))
+  channel.add <>link(newText(blog["blog_url"].getStr))
+  channel.add <>description(newText(blog["blog_description"].getStr))
+  channel.add <>pubDate(newText(blog["last_published"].getStr))
 
   if fg.atomEnabled:
-    # sadly can't use the macro here cos namespace 
-    taglist[4] = newElement("atom:link")
-    taglist[4].attrs = {"href": blog["blog_url"].getStr & fg.atomPath,
-                        "rel": "self", 
-                        "type":"application/rss+xml"}.toXmlAttributes
-
-  let channel = newXmlTree("channel", taglist)
+    # sadly can't use the macro here because the : in the xml
+    let atomLink = newElement("atom:link")
+    atomLink.attrs = {"href": blog["blog_url"].getStr & fg.atomPath,
+                      "rel": "self", 
+                      "type":"application/rss+xml"}.toXmlAttributes
+    channel.add atomLink
 
   # loop over articles, each is a new item
   for item in blog["articles"]:
-    let itemTag = newElement("item")
+    var itemNodes: seq[XmlNode]
+    itemNodes.add <>title(newText(item["metadata"]["title"].getStr))
+    itemNodes.add <>link(newText(blog["blog_url"].getStr & item["metadata"]["slug"].getStr))
+    itemNodes.add <>description(newText(item["metadata"]["description"].getStr))
+    itemNodes.add <>pubDate(newText(item["metadata"]["published"].getStr))
+    itemNodes.add <>author(newText(item["metadata"]["author"].getStr))
+    channel.add newXmlTree("item", itemNodes) 
 
-  let feedattr = {"version": "2.0", "xmlns:atom": "http://www.w3.org/2005/Atom"}.toXmlAttributes
-  let feed = newXmlTree("rss", [channel], feedattr)
+  let channelTree = newXmlTree("channel", channel)
+  let feed = <>rss(channelTree)
+  feed.attrs = {"version":"2.0", "xmlns:atom":"http://www.w3.org/2005/Atom"}.toXmlAttributes
  
   # add the xml header before writing 
   var xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
@@ -58,12 +64,12 @@ proc makeRSS(fg: feedGenerator, blog: JsonNode): void =
   xmlString.add(feed, addNewLines=false, indWidth=0)
   writeFile(fg.rssPath, xmlString)
 
-proc makeAtom(fg: feedGenerator, blog: JsonNode): void =
+proc makeAtom(fg: feedGenerator, blog: JsonNode) {.async.} =
   ## https://validator.w3.org/feed/docs/atom.html
   ## more complex
   discard
 
-proc makeJson(fg: feedGenerator, blog: JsonNode): void =
+proc makeJson(fg: feedGenerator, blog: JsonNode) {.async.} =
   ## Just write the json to the file, no need to process
   writeFile(fg.jsonPath, $ blog)
   discard
@@ -71,8 +77,8 @@ proc makeJson(fg: feedGenerator, blog: JsonNode): void =
 proc makeFeeds*(fg: feedGenerator, blog: JsonNode): void =
   ## Just bundle these nicely for public use
   if fg.rssEnabled:
-    fg.makeRSS(blog)
+    asyncCheck fg.makeRSS(blog)
   if fg.atomEnabled:
-    fg.makeAtom(blog)
+    asyncCheck fg.makeAtom(blog)
   if fg.jsonEnabled:
-    fg.makeJson(blog)
+    asyncCheck fg.makeJson(blog)
