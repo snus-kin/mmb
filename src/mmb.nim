@@ -38,11 +38,8 @@ when isMainModule:
   content["last_published"] = %* now().utc.format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
   content["articles"] = hg.walkContent(basePath & '/' & config.getSectionValue("", "contentPath"))
   
-  echo "Building: HTML"
-  hg.generateIndexHtml(content)
-
-  echo "Building: Feeds"
   fg.makeFeeds(content)
+  hg.generateIndexHtml(content)
 
   let timeEnd = now()
   echo "Built site in: ", (timeEnd - timeStart).inMilliseconds, "ms"
