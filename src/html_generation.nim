@@ -1,4 +1,4 @@
-import os, json, parsecfg
+import os, json, parsecfg, asyncdispatch
 import moustachu
 type 
   htmlGenerator* = ref object of RootObj
@@ -44,7 +44,7 @@ proc renderArticle(hg: htmlGenerator, article: JsonNode): string =
   var context = newContext(article)
   result = render(tmp, context)
 
-proc generateArticleHtml*(hg: htmlGenerator, article: JsonNode): void =
+proc generateArticleHtml*(hg: htmlGenerator, article: JsonNode) {.async.} =
   ## This procedure generates an article html file given a json node
   let rendered_file = hg.renderArticle(article)
 

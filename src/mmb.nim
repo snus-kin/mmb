@@ -1,4 +1,4 @@
-import times, os, json, parsecfg
+import times, os, json, parsecfg, asyncdispatch
 import html_generation, feeds, parsing
 
 
@@ -8,9 +8,18 @@ proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
   for kind, file in walkDir(directory):
     if kind == pcFile:
       let article = parseArticle(file)
+
+      # this could be better
+      article["metadata"]["published"] = %* parseTime(
+          article["metadata"]["published"].getStr,
+          "yyyy-mm-dd", 
+          utc())
+          .format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
+
       articles.add article
+      # perhaps parse the date here to RFC
       # generate a html file at each node
-      hg.generateArticleHtml(article)
+      asyncCheck hg.generateArticleHtml(article)
 
   return articles
 
