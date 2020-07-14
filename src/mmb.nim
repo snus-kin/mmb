@@ -1,5 +1,5 @@
 import times, os, json, parsecfg
-import html_generation, parsing
+import html_generation, feeds, parsing
 
 
 proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
@@ -21,10 +21,18 @@ when isMainModule:
   let basePath = config.getSectionValue("", "basePath")
 
   let hg = newHtmlGenerator(config)
+  let fg = newFeedGenerator(config)
 
   content["blog_title"] = %* config.getSectionValue("general", "blogName")
+  content["blog_url"] = %* config.getSectionValue("general", "blogUrl")
+  content["blog_description"] = %* config.getSectionValue("general", "blogDescription")
+  content["last_published"] = %* "NOW (make this an RFC822 timestamp lol)"
   content["articles"] = hg.walkContent(basePath & '/' & config.getSectionValue("", "contentPath"))
-
+  
+  echo "Building HTML"
   hg.generateIndexHtml(content)
+
+  echo "Building Feeds"
+  fg.makeFeeds(content)
   let timeEnd = now()
   echo "Built site in: ", (timeEnd - timeStart).inMilliseconds, "ms"
