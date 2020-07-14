@@ -17,8 +17,8 @@ proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
 when isMainModule:
   let timeStart = now()
   var content: JsonNode = newJObject()
-  let basePath = getCurrentDir() & "/env"
-  var config = loadConfig(basePath & "/config.ini")
+  var config = loadConfig("config.ini")
+  let basePath = config.getSectionValue("", "basePath")
 
   let hg = newHtmlGenerator(config)
 
