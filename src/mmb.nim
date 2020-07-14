@@ -26,13 +26,14 @@ when isMainModule:
   content["blog_title"] = %* config.getSectionValue("general", "blogName")
   content["blog_url"] = %* config.getSectionValue("general", "blogUrl")
   content["blog_description"] = %* config.getSectionValue("general", "blogDescription")
-  content["last_published"] = %* "NOW (make this an RFC822 timestamp lol)"
+  content["last_published"] = %* now().utc.format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
   content["articles"] = hg.walkContent(basePath & '/' & config.getSectionValue("", "contentPath"))
   
-  echo "Building HTML"
+  echo "Building: HTML"
   hg.generateIndexHtml(content)
 
-  echo "Building Feeds"
+  echo "Building: Feeds"
   fg.makeFeeds(content)
+
   let timeEnd = now()
   echo "Built site in: ", (timeEnd - timeStart).inMilliseconds, "ms"
