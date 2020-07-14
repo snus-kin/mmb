@@ -42,8 +42,7 @@ proc renderArticle(hg: htmlGenerator, article: JsonNode): string =
   let tmp = readFile(hg.templateSelected & "/article.moustachu")
   article["static"] = hg.staticFiles
   var context = newContext(article)
-  let rendered_file = render(tmp, context)
-  return rendered_file
+  result = render(tmp, context)
 
 proc generateArticleHtml*(hg: htmlGenerator, article: JsonNode): void =
   ## This procedure generates an article html file given a json node
@@ -57,8 +56,7 @@ proc renderIndex(hg: htmlGenerator, articles: JsonNode): string =
   ## Given a JsonNode, render an index page with a template
   let tmp = readFile(hg.templateSelected & "/index.moustachu")
   var context = newContext(articles)
-  let rendered_file = render(tmp, context)
-  return rendered_file
+  result = render(tmp, context)
 
 proc generateIndexHtml*(hg: htmlGenerator, articles: JsonNode): void =
   ## Given a JsonNode, generate an index page html and write it
