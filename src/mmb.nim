@@ -1,6 +1,6 @@
 import times, os, json, parsecfg, asyncdispatch
 import cligen
-import html_generation, feeds, parsing
+import htmlgen, feeds, parsing
 
 
 proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
