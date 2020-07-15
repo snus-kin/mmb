@@ -4,11 +4,12 @@ templating.
 
 ## TODO
 - [ ] INLINE STATIC CONTENT IN BLOG POSTS
-- [ ] Feeds support with atom
+- [x] Feeds support with atom
 - [x] Generate template blog posts with subcommand
 - [x] More command line options ESPECIALLY output directory
 - [ ] More theming
-- [ ] Categories (?)
+- [ ] Categories
+    - [ ] Implicit on file structure of the content dir
 - [ ] Import / Export options
   - [ ] `feeds.nim` has function for dumping json, perhaps this could be a stream for stdout
 - [ ] Convert blogUrl config entry to canonical URL

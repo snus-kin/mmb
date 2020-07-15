@@ -1,4 +1,4 @@
-import times, os, json, parsecfg, asyncdispatch, strutils
+import times, os, json, parsecfg, asyncdispatch
 import cligen
 import html_generation, feeds, parsing
 
