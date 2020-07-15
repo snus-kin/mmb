@@ -12,17 +12,17 @@ proc newHtmlGenerator*(config: Config): htmlGenerator =
   var hg = htmlGenerator(
     templatePath: templatePath,
     outputPath: config.getSectionValue("","outputPath"),
-    templateSelected: templatePath.joinPath config.getSectionValue("feel", "theme")
+    templateSelected: templatePath / config.getSectionValue("feel", "theme")
   )
 
-  let staticDirectory = hg.templateSelected.joinPath "static"
+  let staticDirectory = hg.templateSelected / "static"
   # copy to the output dir so we're not using the templated styles
-  copyDir(staticDirectory, hg.outputPath.joinPath "static")
+  copyDir(staticDirectory, hg.outputPath / "static")
   let staticFiles = newJObject()
-  for kind, file in walkDir(hg.outputPath.joinPath "static", relative=true):
+  for kind, file in walkDir(hg.outputPath / "static", relative=true):
     if kind == pcFile:
       let filename = splitFile(file).name
-      staticFiles[filename] = %* ("static".joinPath file)
+      staticFiles[filename] = %* ("static" / file)
   hg.staticFiles = staticFiles
 
   return hg
