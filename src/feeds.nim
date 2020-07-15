@@ -80,7 +80,7 @@ proc makeAtom(fg: feedGenerator, blog: JsonNode) {.async.} =
     entryNodes.add <>author(<>name(newText(item["metadata"]["author"].getStr)))
     entryNodes.add <>summary(newText(item["metadata"]["description"].getStr))
     entryNodes.add <>updated(newText(item["metadata"]["published"].getStr.parse(rfc822format).format(rfc3339format)))
-    entryNodes.add <>content(newText(item["content"].getStr))
+    entryNodes.add <>content(newText(item["content"].getStr), type="html")
 
     feed.add newXmlTree("entry", entryNodes)
   
