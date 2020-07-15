@@ -34,12 +34,12 @@ proc publish(configFile="config.ini", outputPath=""): void =
   else:
     let cOutputPath = config.getSectionValue("", "outputPath")
     if cOutputPath != "":
-      config.setSectionKey("", "outputPath", basePath.joinPath cOutputPath)
+      config.setSectionKey("", "outputPath", basePath / cOutputPath)
     else:
       stderr.writeLine("ERROR: 'outputPath' value not set in config.ini")
       quit(1)
 
-  config.setSectionKey("", "templatePath", basePath.joinPath config.getSectionValue("", "templatePath"))
+  config.setSectionKey("", "templatePath", basePath / config.getSectionValue("", "templatePath"))
 
   var content: JsonNode = newJObject()
   let hg = newHtmlGenerator(config)
@@ -49,7 +49,7 @@ proc publish(configFile="config.ini", outputPath=""): void =
   content["blog_url"] = %* config.getSectionValue("general", "blogUrl")
   content["blog_description"] = %* config.getSectionValue("general", "blogDescription")
   content["last_published"] = %* now().utc.format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
-  content["articles"] = hg.walkContent(basePath.joinPath config.getSectionValue("", "contentPath"))
+  content["articles"] = hg.walkContent(basePath / config.getSectionValue("", "contentPath"))
 
   fg.makeFeeds(content)
   hg.generateIndexHtml(content)
@@ -57,5 +57,16 @@ proc publish(configFile="config.ini", outputPath=""): void =
   let timeEnd = now()
   echo "Built site in: ", (timeEnd - timeStart).inMilliseconds, "ms"
 
+proc postTemplate(configFile="config.ini", title="", description="", author="", slug="", published=now().format("yyyy-mm-dd")): void =
+  ## Creates a template blog post for you, could be used for scripting etc.
+  var config = loadConfig(configFile)
+  let metadata = %* {"title":title, 
+                     "description":description,
+                     "author":author,
+                     "slug":slug,
+                     "published":published}
+  
+  writeFile(title.addFileExt "md", pretty metadata)
+
 when isMainModule:
-  dispatch(publish)
+  dispatchMulti([publish], [postTemplate]) 
