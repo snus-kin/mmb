@@ -12,8 +12,7 @@ type feedGenerator* = ref object of RootObj
   jsonPath: string
 
 proc newFeedGenerator*(config: Config): feedGenerator =
-  let basePath = config.getSectionValue("", "basePath")
-  let outputPath = basePath & '/' & config.getSectionValue("", "outputPath") & '/'
+  let outputPath = config.getSectionValue("", "outputPath") & '/'
   result = feedGenerator(
     rssEnabled : config.getSectionValue("feeds", "rss").parseBool,
     rssPath: outputPath & config.getSectionValue("feeds", "rssFile"),

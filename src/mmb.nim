@@ -1,4 +1,4 @@
-import times, os, json, parsecfg, asyncdispatch
+import times, os, json, parsecfg, asyncdispatch, strutils
 import cligen
 import html_generation, feeds, parsing
 
@@ -24,10 +24,22 @@ proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
 
   return articles
 
-proc publish(config="config.ini"): void =
+proc publish(configFile="config.ini", outputPath=""): void =
   let timeStart = now()
-  var config = loadConfig(config)
+  var config = loadConfig(configFile)
   let basePath = config.getSectionValue("", "basePath")
+ 
+  if outputPath != "":
+    config.setSectionKey("", "outputPath", outputPath)
+  else:
+    let cOutputPath = config.getSectionValue("", "outputPath")
+    if cOutputPath != "":
+      config.setSectionKey("", "outputPath", basePath.joinPath cOutputPath)
+    else:
+      stderr.writeLine("ERROR: 'outputPath' value not set in config.ini")
+      quit(1)
+
+  config.setSectionKey("", "templatePath", basePath.joinPath config.getSectionValue("", "templatePath"))
 
   var content: JsonNode = newJObject()
   let hg = newHtmlGenerator(config)
@@ -37,8 +49,8 @@ proc publish(config="config.ini"): void =
   content["blog_url"] = %* config.getSectionValue("general", "blogUrl")
   content["blog_description"] = %* config.getSectionValue("general", "blogDescription")
   content["last_published"] = %* now().utc.format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
-  content["articles"] = hg.walkContent(basePath & '/' & config.getSectionValue("", "contentPath"))
-  
+  content["articles"] = hg.walkContent(basePath.joinPath config.getSectionValue("", "contentPath"))
+
   fg.makeFeeds(content)
   hg.generateIndexHtml(content)
 

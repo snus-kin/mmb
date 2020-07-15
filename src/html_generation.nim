@@ -2,37 +2,27 @@ import os, json, parsecfg, asyncdispatch
 import moustachu
 type 
   htmlGenerator* = ref object of RootObj
-    basePath: string
     templatePath: string
     outputPath: string
     templateSelected: string
     staticFiles: JsonNode
 
 proc newHtmlGenerator*(config: Config): htmlGenerator =
-  let basePath = config.getSectionValue("", "basePath") & '/'
-  let templatePath = basePath & config.getSectionValue("", "templatePath") & '/'
+  let templatePath = config.getSectionValue("", "templatePath")
   var hg = htmlGenerator(
-    basePath: basePath,
     templatePath: templatePath,
-    outputPath: basePath & config.getSectionValue("","outputPath"),
-    templateSelected: templatePath & config.getSectionValue("feel", "theme")
+    outputPath: config.getSectionValue("","outputPath"),
+    templateSelected: templatePath.joinPath config.getSectionValue("feel", "theme")
   )
 
-  if hg.outputPath != hg.basePath:
-    removeDir(hg.outputPath)
-  else:
-    # output path must be set in config
-    stderr.writeLine("ERROR: 'outputPath' value not set in config.ini")
-    quit(1)
-
-  let staticDirectory = hg.templateSelected & "/static"
+  let staticDirectory = hg.templateSelected.joinPath "static"
   # copy to the output dir so we're not using the templated styles
-  copyDir(staticDirectory, hg.outputPath & "/static")
+  copyDir(staticDirectory, hg.outputPath.joinPath "static")
   let staticFiles = newJObject()
-  for kind, file in walkDir(hg.outputPath & "/static", relative=true):
+  for kind, file in walkDir(hg.outputPath.joinPath "static", relative=true):
     if kind == pcFile:
       let filename = splitFile(file).name
-      staticFiles[filename] = %* ("static/" & file)
+      staticFiles[filename] = %* ("static".joinPath file)
   hg.staticFiles = staticFiles
 
   return hg
