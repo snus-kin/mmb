@@ -3,6 +3,7 @@
 templating. 
 
 ## TODO
+- [ ] INLINE STATIC CONTENT IN BLOG POSTS
 - [ ] Feeds support with atom
 - [ ] Generate template blog posts with subcommand
 - [ ] More command line options ESPECIALLY output directory
