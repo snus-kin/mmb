@@ -2,14 +2,15 @@
 `mmb` is a simple static site generator with lots of extensibility and simple
 templating. 
 
-## TODO
-- [ ] INLINE STATIC CONTENT IN BLOG POSTS
-- [x] Feeds support with atom
-- [x] Generate template blog posts with subcommand
-- [x] More command line options ESPECIALLY output directory
-- [ ] More theming
-- [ ] Categories
-    - [ ] Implicit on file structure of the content dir
-- [ ] Import / Export options
-  - [ ] `feeds.nim` has function for dumping json, perhaps this could be a stream for stdout
-- [ ] Convert blogUrl config entry to canonical URL
+## Features
+`mmb publish`
+
+Convert markdown files in the `contentPath` to html files in the `outputPath`
+creating feeds and index pages. All of the blog is represented as a json tree
+so is structured and portable.
+
+Config for RSS, Atom, json Tree
+
+`mmb template -t title`
+
+Creates a template blog at `contentPath/title.md` ready for writing in.
