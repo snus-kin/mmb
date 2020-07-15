@@ -1,4 +1,4 @@
-import json, parsecfg, xmltree, strutils, asyncdispatch, os
+import json, parsecfg, xmltree, strutils, asyncdispatch, os, times
 ## lets make xml feeds here from json objects
 ##
 ## TODO read the rss/atom spec
@@ -12,6 +12,7 @@ type feedGenerator* = ref object of RootObj
   jsonPath: string
 
 proc newFeedGenerator*(config: Config): feedGenerator =
+  ## Creates a new feedGenerator object from the config loaded in the main module
   let outputPath = config.getSectionValue("", "outputPath")
   result = feedGenerator(
     rssEnabled : config.getSectionValue("feeds", "rss").parseBool,
@@ -23,11 +24,7 @@ proc newFeedGenerator*(config: Config): feedGenerator =
   )
 
 proc makeRSS(fg: feedGenerator, blog: JsonNode) {.async.} =
-  ## https://validator.w3.org/feed/docs/rss2.html
-  ## <channel>
-  ##  title, link, description, pubDate, atom:link
-  ## <item>
-  ##  title, link, description, pubDate, author, source
+  ## Write an rss feed given a JsonNode of blog info and articles
   var channel: seq[XmlNode]
   channel.add <>title(newText(blog["blog_title"].getStr))
   channel.add <>link(newText(blog["blog_url"].getStr))
@@ -46,7 +43,7 @@ proc makeRSS(fg: feedGenerator, blog: JsonNode) {.async.} =
   for item in blog["articles"]:
     var itemNodes: seq[XmlNode]
     itemNodes.add <>title(newText(item["metadata"]["title"].getStr))
-    itemNodes.add <>link(newText(blog["blog_url"].getStr & item["metadata"]["slug"].getStr))
+    itemNodes.add <>link(newText(blog["blog_url"].getStr / item["metadata"]["slug"].getStr))
     itemNodes.add <>description(newText(item["metadata"]["description"].getStr))
     itemNodes.add <>pubDate(newText(item["metadata"]["published"].getStr))
     itemNodes.add <>author(newText(item["metadata"]["author"].getStr))
@@ -64,17 +61,40 @@ proc makeRSS(fg: feedGenerator, blog: JsonNode) {.async.} =
   writeFile(fg.rssPath, xmlString)
 
 proc makeAtom(fg: feedGenerator, blog: JsonNode) {.async.} =
-  ## https://validator.w3.org/feed/docs/atom.html
-  ## more complex
-  discard
+  ## Write an atom feed given JsonNode of blog info and articles
+  var feed: seq[XmlNode]
+  let rfc822format = initTimeFormat("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
+  let rfc3339format = initTimeFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+  feed.add <>title(newText(blog["blog_title"].getStr))
+  feed.add <>link(href=blog["blog_url"].getStr)
+  feed.add <>id(newText(blog["blog_url"].getStr)) # id is just blog url
+  feed.add <>author(<>name(newText(blog["blog_author"].getStr)))
+  # time must be RFC3339 compliant
+  feed.add <>updated(newText(blog["last_published"].getStr.parse(rfc822format).format(rfc3339format)))
+
+  for item in blog["articles"]:
+    var entryNodes: seq[XmlNode]
+    entryNodes.add <>title(newText(item["metadata"]["title"].getStr))
+    entryNodes.add <>link(href=blog["blog_url"].getStr / item["metadata"]["slug"].getStr)
+    entryNodes.add <>id(newText(blog["blog_url"].getStr / item["metadata"]["slug"].getStr))
+    entryNodes.add <>author(<>name(newText(item["metadata"]["author"].getStr)))
+    entryNodes.add <>summary(newText(item["metadata"]["description"].getStr))
+    entryNodes.add <>updated(newText(item["metadata"]["published"].getStr.parse(rfc822format).format(rfc3339format)))
+    entryNodes.add <>content(newText(item["content"].getStr))
+
+    feed.add newXmlTree("entry", entryNodes)
+  
+  let feedTree = newXmlTree("feed", feed, {"xmlns": "http://www.w3.org/2005/Atom"}.toXmlAttributes)
+  var xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+  writeFile(fg.atomPath, xmlString & $ feedTree)
 
 proc makeJson(fg: feedGenerator, blog: JsonNode) {.async.} =
-  ## Just write the json to the file, no need to process
+  ## Just writes the json object to a file, no processing
   writeFile(fg.jsonPath, $ blog)
-  discard
 
 proc makeFeeds*(fg: feedGenerator, blog: JsonNode): void =
   ## Just bundle these nicely for public use
+  ## When implementing categories it should be possible to just pass the category to this
   if fg.rssEnabled:
     asyncCheck fg.makeRSS(blog)
   if fg.atomEnabled:
