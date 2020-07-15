@@ -1,4 +1,4 @@
-import json, parsecfg, xmltree, strutils, asyncdispatch
+import json, parsecfg, xmltree, strutils, asyncdispatch, os
 ## lets make xml feeds here from json objects
 ##
 ## TODO read the rss/atom spec
@@ -12,14 +12,14 @@ type feedGenerator* = ref object of RootObj
   jsonPath: string
 
 proc newFeedGenerator*(config: Config): feedGenerator =
-  let outputPath = config.getSectionValue("", "outputPath") & '/'
+  let outputPath = config.getSectionValue("", "outputPath")
   result = feedGenerator(
     rssEnabled : config.getSectionValue("feeds", "rss").parseBool,
-    rssPath: outputPath & config.getSectionValue("feeds", "rssFile"),
+    rssPath: outputPath.joinPath config.getSectionValue("feeds", "rssFile"),
     atomEnabled : config.getSectionValue("feeds", "atom").parseBool,
-    atomPath: outputPath & config.getSectionValue("feeds", "atomFile"),
+    atomPath: outputPath.joinPath config.getSectionValue("feeds", "atomFile"),
     jsonEnabled : config.getSectionValue("feeds", "json").parseBool,
-    jsonPath: outputPath & config.getSectionValue("feeds", "jsonFile")
+    jsonPath: outputPath.joinPath config.getSectionValue("feeds", "jsonFile")
   )
 
 proc makeRSS(fg: feedGenerator, blog: JsonNode) {.async.} =
