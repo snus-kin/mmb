@@ -1,4 +1,5 @@
 import times, os, json, parsecfg, asyncdispatch
+import cligen
 import html_generation, feeds, parsing
 
 
@@ -23,12 +24,12 @@ proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
 
   return articles
 
-when isMainModule:
+proc publish(config="config.ini"): void =
   let timeStart = now()
-  var content: JsonNode = newJObject()
-  var config = loadConfig("config.ini")
+  var config = loadConfig(config)
   let basePath = config.getSectionValue("", "basePath")
 
+  var content: JsonNode = newJObject()
   let hg = newHtmlGenerator(config)
   let fg = newFeedGenerator(config)
 
@@ -43,3 +44,6 @@ when isMainModule:
 
   let timeEnd = now()
   echo "Built site in: ", (timeEnd - timeStart).inMilliseconds, "ms"
+
+when isMainModule:
+  dispatch(publish)
