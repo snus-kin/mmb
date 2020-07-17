@@ -1,13 +1,14 @@
 import times, os, json, parsecfg, asyncdispatch
 import cligen
-import htmlgen, feeds, parsing
+import htmlgen, feeds, parsing, images
 
 
 proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
   let articles = newJArray()
   # now we do the walking
   for kind, file in walkDir(directory):
-    if kind == pcFile:
+    # if it's a markdown file
+    if kind == pcFile and file.splitFile[2] == ".md":
       let article = parseArticle(file)
 
       # this could be better
@@ -75,9 +76,11 @@ proc publish(configFile="config.ini", outputPath=""): void =
   # Get current time of building for the blog
   content["last_published"] = %* timeStart.utc.format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
   content["articles"] = hg.walkContent(basePath / config.getSectionValue("", "contentPath"))
+
+  content["images"] = %* copyImages(config)
   
   asyncCheck deleteUnused(config, content)
-
+  
   fg.makeFeeds(content)
   hg.generateIndexHtml(content)
   
