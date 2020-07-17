@@ -23,6 +23,26 @@ proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
 
   return articles
 
+proc deleteUnused(config: Config, content: JsonNode) {.async.} = 
+  # maybe this can be a proc input config and content
+  var articleSlugs: seq[string]
+  for article in content["articles"]:
+    articleSlugs.add article["metadata"]["slug"].getStr
+    if article["metadata"]["slug"].getStr in articleSlugs:
+      stderr.writeLine("WARNING: Duplicate slug in file " & article["metadata"]["title"].getStr)
+
+  # here we would also get images ? or at least just copy them  maybe a proc
+
+  # Now delete any files that aren't in the blog json node
+  for kind, file in walkDir(config.getSectionValue("","outputPath")):
+    # only files, not directories
+    if kind == pcFile:
+      # delete article if not in list of article slugs
+      let split = file.splitFile
+      if split[1] & split[2] notin articleSlugs and split[2] == ".html":
+        removeFile(file)
+      # here we would delete image if not in list of images
+
 proc publish(configFile="config.ini", outputPath=""): void =
   ## Build html files and feeds, publish to an output path
   let timeStart = now()
@@ -55,23 +75,8 @@ proc publish(configFile="config.ini", outputPath=""): void =
   # Get current time of building for the blog
   content["last_published"] = %* timeStart.utc.format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
   content["articles"] = hg.walkContent(basePath / config.getSectionValue("", "contentPath"))
-
-  var articleSlugs: seq[string]
-  for article in content["articles"]:
-    # here we would also get images ?
-    articleSlugs.add article["metadata"]["slug"].getStr
-    if article["metadata"]["slug"].getStr in articleSlugs:
-      stderr.writeLine("WARNING: Duplicate slug in file " & article["metadata"]["title"].getStr)
-
-  # Now delete any files that aren't in the blog json node
-  for kind, file in walkDir(config.getSectionValue("","outputPath")):
-    # only files, not directories
-    if kind == pcFile:
-      # delete article if not in list of article slugs
-      let split = file.splitFile
-      if split[1] & split[2] notin articleSlugs and split[2] == ".html":
-        removeFile(file)
-      # here we would delete image if not in list of images
+  
+  asyncCheck deleteUnused(config, content)
 
   fg.makeFeeds(content)
   hg.generateIndexHtml(content)
