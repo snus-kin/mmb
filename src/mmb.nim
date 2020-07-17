@@ -30,6 +30,8 @@ proc deleteUnused(config: Config, content: JsonNode) {.async.} =
   for article in content["articles"]:
     articleSlugs.add article["metadata"]["slug"].getStr
     if article["metadata"]["slug"].getStr in articleSlugs:
+      echo articleSlugs
+      echo article["metadata"]["slug"]
       stderr.writeLine("WARNING: Duplicate slug in file " & article["metadata"]["title"].getStr)
 
   # here we would also get images ? or at least just copy them  maybe a proc
