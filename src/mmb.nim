@@ -110,6 +110,8 @@ proc `template`(configFile="config.ini",
                      "published":published}
  
   let contentPath = config.getSectionValue("", "basePath") / config.getSectionValue("", "contentPath")
+  # Make sure this exists so that we don't get errors
+  createDir(contentPath)
   writeFile(contentPath / title.addFileExt "md", pretty metadata)
 
 when isMainModule:

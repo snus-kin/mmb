@@ -12,6 +12,9 @@ proc copyImages*(config: Config): JsonNode =
   # This allows relative linking from within the document
   let imagePath = config.getSectionValue("", "basePath") / config.getSectionValue("", "contentPath") / "images"
   let imageOutputPath = config.getSectionValue("", "outputPath") / "images"
+  # just make sure that it exists
+  createDir(imagePath)
+  createDir(imageOutputPath)
   var images: seq[string]
 
   for kind, file in walkDir(imagePath):
