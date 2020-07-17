@@ -18,7 +18,6 @@ proc walkContent(hg: htmlGenerator, directory: string): JsonNode =
           .format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
 
       articles.add article
-      # perhaps parse the date here to RFC
       # generate a html file at each node
       asyncCheck hg.generateArticleHtml(article)
 
@@ -29,7 +28,8 @@ proc publish(configFile="config.ini", outputPath=""): void =
   let timeStart = now()
   var config = loadConfig(configFile)
   let basePath = config.getSectionValue("", "basePath")
- 
+
+  # Make sure the output path is set so we don't spew files everywhere
   if outputPath != "":
     config.setSectionKey("", "outputPath", outputPath)
   else:
@@ -46,19 +46,38 @@ proc publish(configFile="config.ini", outputPath=""): void =
   var content: JsonNode = newJObject()
   let hg = newHtmlGenerator(config)
   let fg = newFeedGenerator(config)
-
+  
+  # Set overall blog metadata from the config file
   content["blog_title"] = %* config.getSectionValue("general", "blogName")
   content["blog_url"] = %* config.getSectionValue("general", "blogUrl")
   content["blog_author"] = %* config.getSectionValue("general", "author")
   content["blog_description"] = %* config.getSectionValue("general", "blogDescription")
-  content["last_published"] = %* now().utc.format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
+  # Get current time of building for the blog
+  content["last_published"] = %* timeStart.utc.format("ddd', 'd MMM yyyy HH:mm:ss 'GMT'")
   content["articles"] = hg.walkContent(basePath / config.getSectionValue("", "contentPath"))
+
+  var articleSlugs: seq[string]
+  for article in content["articles"]:
+    # here we would also get images ?
+    articleSlugs.add article["metadata"]["slug"].getStr
+    if article["metadata"]["slug"].getStr in articleSlugs:
+      stderr.writeLine("WARNING: Duplicate slug in file " & article["metadata"]["title"].getStr)
+
+  # Now delete any files that aren't in the blog json node
+  for kind, file in walkDir(config.getSectionValue("","outputPath")):
+    # only files, not directories
+    if kind == pcFile:
+      # delete article if not in list of article slugs
+      let split = file.splitFile
+      if split[1] & split[2] notin articleSlugs and split[2] == ".html":
+        removeFile(file)
+      # here we would delete image if not in list of images
 
   fg.makeFeeds(content)
   hg.generateIndexHtml(content)
-
+  
   let timeEnd = now()
-  echo "Built site in: ", (timeEnd - timeStart).inMilliseconds, "ms"
+  echo "Built " & $ len(content["articles"]) & " pages in: ", (timeEnd - timeStart).inMilliseconds, "ms"
 
 proc `template`(configFile="config.ini", 
                 title: string, 
